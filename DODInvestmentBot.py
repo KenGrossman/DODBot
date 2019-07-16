@@ -5,6 +5,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+'''
+Helper Functions 
+'''
+
 #Function for more visible test headers
 def printTestName(message):
 	bufferTiles = 24 - (int)(len(message)/2)
@@ -31,23 +35,8 @@ def programSearch(searchString):
 		return False
 	else:
 		return True
-
-#Attempt to search in program element number search field
-def searchTest(searchString):
-	testCleanup()
-	printTestName('Starting Search Test')
-	
-	if (programSearch(searchString)):
-		resultsValue = int(resultsNumber.get_property("outerText").strip("Results: "))
-		print('Pass: Search provided {} results'.format(resultsValue))
-	else:
-		print('Fail: no search results found')
-
-#Check if search string appears in the Program Element number field of all results
-def searchCorrectnessTest(searchString):
-	testCleanup()
-	printTestName('Starting Search Correctness Test')
-
+#Grab all search results from all pages and return list of objects
+def collectSearchResults(searchString):
 	if (programSearch(searchString)):
 		nextPageButtonContainer = driver.find_element(By.XPATH, '/html/body/div[3]/div/ng-include/div/dir-pagination-controls[1]/div/ul/li[5]')
 		nextPageButton = driver.find_element(By.XPATH, '/html/body/div[3]/div/ng-include/div/dir-pagination-controls[1]/div/ul/li[5]/a')
@@ -65,20 +54,49 @@ def searchCorrectnessTest(searchString):
 			
 			if(hasNextPage):
 				nextPageButton.click()
-
-		#Loop through search results to verify search String appears in each result
-		testPassed = True;	
-		for result in searchResults:
-			if searchString not in result.get_property('innerText'):
-				testPassed = False
-
-		#Print test results
-		if testPassed:
-			print('Pass: Search term found in all results')
-		else:
-			print('Fail: Search term did not appear in all results')
+		return searchResults
 	else:
 		print('Fail: no search results found')
+		return []
+
+'''
+Test Functions
+'''
+
+#Attempt to search in program element number search field
+def searchTest(searchString):
+	testCleanup()
+	printTestName('Starting Search Test')
+	
+	if (programSearch(searchString)):
+		resultsValue = int(resultsNumber.get_property("outerText").strip("Results: "))
+		print('Pass: Search provided {} results'.format(resultsValue))
+	else:
+		print('Fail: no search results found')
+
+#Check if search string appears in the Program Element number field of all results
+def searchCorrectnessTest(searchString):
+	testCleanup()
+	printTestName('Starting Search Correctness Test')
+
+	searchResults = collectSearchResults(searchString)
+
+	#Loop through search results to verify search String appears in each result
+	testPassed = True if len(searchResults) > 0 else False;	
+	
+	for result in searchResults:
+		if searchString not in result.get_property('innerText'):
+			testPassed = False
+
+	#Print test results
+	if testPassed:
+		print('Pass: Search term found in all results')
+	else:
+		print('Fail: Search term did not appear in all results')
+
+# def validateNumberofResults()
+# 	#Compare numberOfSearchResults to 
+# 	testPassed = True if numberOfSearchResults == 
 
 
 #Add location of downloaded selenium chrome driver
@@ -87,6 +105,7 @@ driverPath = '/Users/kennygrossman/Projects/Bots/Drivers/chromedriver'
 URL = 'https://apps.dtic.mil/dodinvestment/#/advancedSearch'
 webpageTimeout = 30
 searchString = '0603680F'
+numberOfSearchResults = 0
 
 #Initialize Chrome driver and load webpage
 driver = webdriver.Chrome(driverPath)
