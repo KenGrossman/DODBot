@@ -7,7 +7,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 '''
-Helper Functions 
+========================================================================================================
+Helper Functions
 '''
 #Function for more visible test headers
 def printTestName(message):
@@ -50,19 +51,22 @@ def collectSearchResults(searchString):
 		#Loop through all pages
 		hasNextPage = True
 		while(hasNextPage):
-			#Grab all results and add to searchResult list
+			#Grab all results
 			tempResults = driver.find_elements(By.CLASS_NAME, 'record-listing')
 
+			# else:
 			for result in tempResults:
 				searchResults.append(result.get_property('innerText'))
 
 			#Determine if another page exists
+			#Try catch in the event that the page buttons do not exist
 			try:
 				buttonClasses = nextPageButtonContainer.get_attribute( "class" ).split(' ')
 				hasNextPage = "disabled" not in buttonClasses
 			except:
 				hasNextPage = False
 			
+			#Advance to next page...sleep needed for timing
 			if(hasNextPage):
 				nextPageButton.click()
 				time.sleep(.5)
@@ -73,6 +77,7 @@ def collectSearchResults(searchString):
 		return []
 
 '''
+========================================================================================================
 Helper functions that have not yet been implemented
 '''
 def revealAndClickBudetOptions():
@@ -94,13 +99,13 @@ def revealAndClickBudetOptions():
 		element.click()	
 
 '''
+========================================================================================================
 Test Functions
 '''
 def testSuite(searchString):
 	searchTest(searchString)
 	searchCorrectnessTest(searchString)
 	validateNumberofResults(searchString)
-	validateLinkAccuracy(searchString)
 	clearButtonTest()
 
 #Attempt to search in program element number search field
@@ -125,7 +130,6 @@ def searchCorrectnessTest(searchString):
 	testPassed = True if len(searchResults) > 0 else False;	
 
 	for result in searchResults:
-		# print('Result: {}'.format(result.get_property('innerText')))
 		if searchString not in result:
 			testPassed = False
 
@@ -153,18 +157,12 @@ def validateNumberofResults(searchString):
 	else:
 		print('Fail: Search provided a different number of results than expected')	
 
-#Validate that links on page match filenames
-def validateLinkAccuracy(searchString):
-	printTestName('Validate links match filenames')	
-	testCleanup()
-	searchResults = collectSearchResults(searchString)
-	
-
 #Ensure clear button clears text field and results
 def clearButtonTest():
 	printTestName('Test Clear Button functionality')	
 	testCleanup()
-	if programSearchBox.get_property("value") == "" and resultsNumber.get_property("outerText") == "Results: ":
+
+	if programSearchBox.get_property("value") == "" and resultsNumber.get_property("outerText") == " Results: ":
 		testPassed = True
 	else:
 		testPassed = False
@@ -176,6 +174,7 @@ def clearButtonTest():
 		print('Fail: Clear Button did not reset some elements')	
 
 '''
+========================================================================================================
 Main Body
 '''
 #Add location of downloaded selenium chrome driver
@@ -197,6 +196,7 @@ try:
 except:
 	print("Failed to load webpage")
 else:
+	time.sleep(.5)
 	#Identify page objects for later use
 	searchButton = driver.find_element(By.XPATH, '//*[@id="performSearch"]')
 	clearButton = driver.find_element(By.XPATH, '//*[@id="clearSearch"]')
